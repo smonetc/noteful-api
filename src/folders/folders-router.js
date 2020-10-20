@@ -2,7 +2,7 @@ const express = require('express')
 const FoldersService = require('./folders-service')
 const path = require('path')
 
-const foldersRouter = express.Router()
+const folderRouter = express.Router()
 const jsonParser = express.json()
 
 const serializeFolder = folder => ({
@@ -10,7 +10,7 @@ const serializeFolder = folder => ({
     title: folder.title
 })
 
-foldersRouter
+folderRouter
 .route('/')
 .get((req, res, next) => {
     FoldersService.getAllFolders(req.app.get('db'))
@@ -22,6 +22,7 @@ foldersRouter
 .post(jsonParser, (req, res, next) => {
     const { title } = req.body
     const newFolder = {title}
+
     for (const [key, value] of Object.entries(newFolder)) {
        if (value == null) {
         return res.status(400).json({
@@ -29,7 +30,8 @@ foldersRouter
         })
         }
     }
-    newFolder.folder = folder
+
+    newFolder.title = title
     FoldersService.insertFolder(
       req.app.get('db'),
       newFolder
@@ -40,25 +42,23 @@ foldersRouter
           .location(path.posix.join(req.originalUrl, `/${folder.id}`))
           .json(serializeFolder(folder))
       })
-      .catch(next)
+    .catch(next)
 })
 
-foldersRouter
+folderRouter
 .route('/:folder_id')
 .all((req, res, next) => {
-    FoldersService.getById(
-        req.app.get('db'),
-        req.params.folder_id
-    )
+    const { folder_id } = req.params
+    FoldersService.getById(req.app.get('db'), folder_id)
     .then(folder => {
         if (!folder) {
-            return res.status(404).json({
-                error: { message: `Folder doesn't exist` }
-        })
-    }
-    res.folder = folder
-    next() 
-    })
+          return res.status(404).json({
+            error: { message: `Folder Not Found` }
+          })
+        }
+        res.folder = folder
+        next()
+      })
     .catch(next)
     })
     .get((req, res, next) => {
@@ -100,4 +100,4 @@ foldersRouter
         .catch(next)
 })
 
-module.exports = foldersRouter
+module.exports = folderRouter
