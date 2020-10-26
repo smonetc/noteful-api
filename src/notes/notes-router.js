@@ -1,16 +1,17 @@
 const express = require('express')
 const NotesService = require('./notes-service')
 const path = require('path')
+const xss = require('xss')
 
 const notesRouter = express.Router()
 const jsonParser = express.json()
 
 const serializeNote = note => ({
     id: note.id,
-    title: note.title,
+    title: xss(note.title),
     modified:note.modified,
     folder_id:note.folder_id,
-    content:note.content
+    content:xss(note.content)
 })
 
 notesRouter
@@ -66,10 +67,10 @@ notesRouter
 .get((req, res, next) => {
     res.json({
         id:res.note.id,
-        title: res.note.title,
+        title: xss(res.note.title),
         modified:res.note.modified,
         folder_id:res.note.folder_id,
-        content:res.note.content
+        content:xss(res.note.content),
     })
 })
 .patch(jsonParser, (req, res, next) => {
