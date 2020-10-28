@@ -1,17 +1,17 @@
 const express = require('express')
 const NotesService = require('./notes-service')
 const path = require('path')
-const xss = require('xss')
+
 
 const notesRouter = express.Router()
 const jsonParser = express.json()
 
 const serializeNote = note => ({
     id: note.id,
-    title: xss(note.title),
+    title: note.title,
     modified:note.modified,
     folder_id:note.folder_id,
-    content:xss(note.content)
+    content:note.content
 })
 
 notesRouter
@@ -49,10 +49,13 @@ notesRouter
 })
 
 notesRouter
-.route('/:note_id')
+.route('/:note_id') //note_id
 .all((req,res,next) => {
  const {note_id} = req.params
- NotesService.getById(req.app.get('db'), note_id)
+ NotesService.getById(
+    req.app.get('db'), 
+    note_id
+    )
  .then(note => {
     if (!note) {
         return res.status(404).json({
@@ -67,10 +70,10 @@ notesRouter
 .get((req, res, next) => {
     res.json({
         id:res.note.id,
-        title: xss(res.note.title),
+        title: res.note.title,
         modified:res.note.modified,
         folder_id:res.note.folder_id,
-        content:xss(res.note.content),
+        content:res.note.content,
     })
 })
 .patch(jsonParser, (req, res, next) => {
@@ -89,7 +92,7 @@ notesRouter
 
     NotesService.updateNote(
         req.app.get('db'),
-        req.params.note_id,
+        req.params.note_id, //note_id
         noteToUpdate
     )
     .then(numRowsAffected => {
@@ -100,7 +103,7 @@ notesRouter
 .delete((req,res,next) => {
     NotesService.deleteNote(
         req.app.get('db'),
-        req.params.note_id
+        req.params.note_id //note_id
     )
     .then(() => {
         res.status(204).end()
